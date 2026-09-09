@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo — API v1 · PZaaS</title>
+<meta name="description" content="Documentação da API do serviço de Catálogo do projeto PZaaS — cardápio e disponibilidade numa resposta só.">
+<style>
+:root{
+  --vinho:#3A0E12; --vinho80:#4A1E22; --taupe60:#6B6058; --taupe30:#A79C91;
+  --taupe10:#F6F3EF; --line:#E7E1D8; --white:#FFFFFF; --manjericao:#4F7A38;
+  --ok:#3F7D4C; --warn:#A66A1F; --err:#8C2F2A;
+  --ft:'Bookman Old Style','Georgia',serif;
+  --fs:'Calibri','Segoe UI',sans-serif;
+  --fm:'Courier New',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--white);color:var(--vinho);font-family:var(--fs);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--vinho);text-decoration:none;border-bottom:1px solid var(--line)}
+a:hover{border-color:var(--manjericao)}
+
+/* topo */
+.top{position:sticky;top:0;z-index:20;background:var(--vinho);color:var(--white)}
+.top .in{max-width:1240px;margin:0 auto;padding:16px 40px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--manjericao);flex:0 0 auto}
+.top h1{font-family:var(--ft);font-style:italic;font-weight:700;font-size:16px;margin:0}
+.top .meta{margin-left:auto;font-family:var(--fm);font-size:12px;color:#C7ABAD}
+.top .meta b{color:var(--white);font-weight:400}
+
+/* layout */
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:220px 1fr;gap:56px;align-items:start}
+nav{position:sticky;top:80px;padding:44px 0;font-size:13px}
+nav .grp{font-family:var(--ft);font-style:italic;color:var(--taupe30);font-size:13px;margin:24px 0 8px}
+nav .grp:first-child{margin-top:0}
+nav a{display:block;padding:4px 0;color:var(--taupe60);border:0}
+nav a:hover{color:var(--vinho)}
+nav a.on{color:var(--vinho);font-weight:700}
+main{padding:44px 0 120px;min-width:0}
+
+/* hero */
+.hero{padding-bottom:42px;border-bottom:1px solid var(--line);margin-bottom:48px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--taupe30);display:flex;align-items:center;gap:9px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--manjericao)}
+.hero h2{font-family:var(--ft);font-size:40px;line-height:1.1;font-weight:700;margin:16px 0 14px}
+.lede{font-size:17px;color:var(--taupe60);max-width:640px;margin:0;font-style:italic}
+
+/* secoes */
+section{margin-bottom:60px}
+h3{font-family:var(--ft);font-size:26px;font-weight:700;margin:0 0 8px}
+h4{font-family:var(--ft);font-size:17px;font-weight:700;font-style:italic;margin:30px 0 8px;color:var(--vinho)}
+p{margin:0 0 14px;color:var(--taupe60);max-width:720px}
+p strong,li strong{color:var(--vinho);font-weight:700}
+.sub{color:var(--taupe60);margin-bottom:24px;max-width:720px;font-style:italic}
+ul{margin:0 0 16px;padding-left:18px;color:var(--taupe60)}
+li{margin-bottom:6px}
+code{font-family:var(--fm);font-size:.88em;background:var(--taupe10);padding:2px 6px;border-radius:4px;color:var(--vinho)}
+
+/* blocos de codigo */
+.code{position:relative;background:var(--taupe10);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin:0 0 18px;overflow-x:auto}
+.code.dark{background:var(--vinho);border-color:var(--vinho)}
+.code pre{margin:0;font-family:var(--fm);font-size:12.5px;line-height:1.75;color:var(--vinho);white-space:pre}
+.code.dark pre{color:#EEDCD3}
+.copy{position:absolute;top:10px;right:10px;background:var(--white);border:1px solid var(--line);border-radius:5px;font-family:var(--fs);font-size:10px;font-weight:700;color:var(--taupe60);padding:4px 9px;cursor:pointer;opacity:0;transition:opacity .15s}
+.code:hover .copy{opacity:1}
+.copy:hover{color:var(--vinho);border-color:var(--taupe30)}
+.code.dark .copy{background:var(--vinho80);border-color:#6E4144;color:#C7ABAD}
+
+/* endpoint */
+.ep{border-top:1px solid var(--line);padding-top:26px;margin-top:34px}
+.epline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.verb{font-family:var(--fm);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.4px;border:1px solid}
+.get{color:var(--ok);border-color:var(--ok);background:#EAF3EA}
+.path{font-family:var(--fm);font-size:15px;font-weight:700;color:var(--vinho)}
+.tag{font-size:11px;color:var(--taupe30);border:1px solid var(--line);border-radius:20px;padding:2px 10px}
+
+/* tabelas */
+table{width:100%;border-collapse:collapse;margin:0 0 20px;font-size:13.5px}
+th{text-align:left;font-family:var(--ft);font-style:italic;font-weight:700;color:var(--vinho);font-size:13px;padding:0 14px 10px 0;border-bottom:1.5px solid var(--vinho)}
+td{padding:11px 14px 11px 0;border-bottom:1px solid var(--line);color:var(--taupe60);vertical-align:top}
+td:first-child{color:var(--vinho);font-weight:700}
+td code,th code{background:none;padding:0}
+
+/* cards -- sempre brancos, borda, nunca preenchidos */
+.grid{display:grid;gap:16px;margin-bottom:20px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px}
+.card.hl{border-color:var(--manjericao);border-width:1.5px}
+.card h5{font-family:var(--ft);margin:0 0 6px;font-size:15px;font-weight:700;font-style:italic;color:var(--vinho)}
+.card p{margin:0;font-size:13px;color:var(--taupe60)}
+.k{font-family:var(--ft);font-size:11px;font-style:italic;color:var(--manjericao);margin-bottom:7px}
+
+/* pilulas de status */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.pill{font-family:var(--fm);font-size:11.5px;background:var(--white);border:1px solid var(--taupe30);border-radius:20px;padding:6px 14px;color:var(--vinho)}
+.pill.ok{border-color:var(--ok);color:var(--ok);background:#EAF3EA}
+.pill.err{border-color:var(--err);color:var(--err);background:#F6E7E6}
+
+.note{border-radius:8px;border:1px solid var(--line);padding:16px 20px;margin-bottom:20px;font-size:13.5px;color:var(--taupe60)}
+.note b{color:var(--vinho);font-weight:700}
+.note.open{border-color:var(--warn);background:#FBF1E1}
+.note.open b{color:#7A5310}
+.note.ok{border-color:var(--ok);background:#EAF3EA}
+
+/* menu card -- motivo exclusivo deste sistema */
+.menu-frame{border:1px solid var(--taupe30);border-radius:4px;padding:34px 40px;margin-bottom:22px}
+.menu-frame .label{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:2.5px;color:var(--taupe30)}
+.menu-frame .rule{width:60px;height:2px;background:var(--manjericao);margin:12px auto 26px}
+.dish{margin-bottom:22px}
+.dish-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dish-name{font-family:var(--ft);font-size:23px;font-weight:700;font-style:italic;color:var(--vinho)}
+.dish-status{font-family:var(--fm);font-size:10.5px;font-weight:700;border-radius:20px;padding:4px 12px;border:1px solid}
+.dish-status.avail{color:var(--ok);border-color:var(--ok);background:#EAF3EA}
+.dish-status.unavail{color:var(--err);border-color:var(--err);background:#F6E7E6}
+.dish-ing{color:var(--taupe60);font-size:12.5px;margin-top:4px}
+.dish-price{font-family:var(--ft);font-weight:700;font-style:italic;color:var(--vinho);margin-top:6px}
+.dish-motivo{font-family:var(--fm);font-size:11px;font-style:italic;color:var(--err);margin-top:4px}
+.dish-divider{border:0;border-top:1px solid var(--line);margin:20px 0}
+
+footer{border-top:1px solid var(--line);padding:28px 0 0;color:var(--taupe30);font-size:12.5px;display:flex;gap:20px;flex-wrap:wrap;font-style:italic}
+
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr;gap:0;padding:0 22px}
+  nav{position:static;padding:26px 0 0;display:flex;flex-wrap:wrap;gap:0 18px}
+  nav .grp{display:none}
+  .top .in{padding:14px 22px}
+  .g2,.g3{grid-template-columns:1fr}
+  .hero h2{font-size:30px}
+  .menu-frame{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="in">
+    <span class="dot"></span>
+    <h1>Catálogo · PZaaS</h1>
+    <span class="meta">v1 · <b>turmaa12</b> · RA 241953 / 241959</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<nav id="nav">
+  <div class="grp">Começar</div>
+  <a href="#visao">Visão geral</a>
+  <a href="#rapido">Integração em 3 minutos</a>
+  <a href="#padroes">Padrões e autenticação</a>
+  <div class="grp">Endpoints</div>
+  <a href="#health">GET /health</a>
+  <a href="#menu">GET /v1/menu</a>
+  <a href="#detalhe">GET /v1/menu/{id}</a>
+  <div class="grp">Referência</div>
+  <a href="#cardapio">O cardápio hoje</a>
+  <a href="#erros">Códigos de erro</a>
+  <a href="#resiliencia">Resiliência</a>
+  <a href="#observabilidade">Observabilidade</a>
+  <div class="grp">Notas</div>
+  <a href="#aberto">Contrato em aberto</a>
+  <a href="#changelog">Changelog</a>
+</nav>
+
+<main>
+
+<div class="hero">
+  <div class="eyebrow">Serviço 02 · versão A</div>
+  <h2>Catálogo</h2>
+  <p class="lede">O que existe, quanto custa, e se dá pra vender agora — numa resposta só.</p>
+</div>
+
+<section id="visao">
+  <h3>Visão geral</h3>
+  <p class="sub">Se você vai integrar com este serviço, estas são as três coisas que precisa saber antes de qualquer outra.</p>
+  <div class="grid g3">
+    <div class="card hl">
+      <div class="k">I</div>
+      <h5>Cardápio e disponibilidade juntos</h5>
+      <p>Não existe endpoint separado para disponibilidade. <code>disponivel</code> e <code>motivo</code> vêm dentro de cada pizza, em <code>/v1/menu</code> e <code>/v1/menu/{id}</code>.</p>
+    </div>
+    <div class="card">
+      <div class="k">II</div>
+      <h5>Nunca devolve 503</h5>
+      <p>Se o Estoque cair dos dois lados (A e B), o cardápio ainda responde <code>200</code> — só a disponibilidade fica <code>null</code>, com um aviso.</p>
+    </div>
+    <div class="card">
+      <div class="k">III</div>
+      <h5>Preço mora aqui</h5>
+      <p>Decisão nossa: o Catálogo é quem já tem o dado descritivo da pizza, então o preço viaja junto — não vem do Estoque.</p>
+    </div>
+  </div>
+
+  <h4>Base URL</h4>
+  <div class="code"><button class="copy">copiar</button><pre>Produção   https://pzaas.online/webhook/turmaa12
+Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
+  <p>A URL de teste só responde com o workflow aberto no editor, em modo <em>Execute workflow</em>. Para integração, use sempre a de produção.</p>
+</section>
+
+<section id="rapido">
+  <h3>Integração em 3 minutos</h3>
+  <p class="sub">Três comandos. Se os três passarem, a integração está funcionando.</p>
+
+  <h4>1. Confirme que estamos no ar</h4>
+  <div class="code"><button class="copy">copiar</button><pre>curl -i https://pzaas.online/webhook/turmaa12/health</pre></div>
+  <p>Esperado: <code>200</code>, <code>"status": "ok"</code>. Este é o único endpoint sem autenticação.</p>
+
+  <h4>2. Peça o cardápio completo</h4>
+  <div class="code"><button class="copy">copiar</button><pre>curl -s https://pzaas.online/webhook/turmaa12/v1/menu \
+  -H "x-api-key: turma2026"</pre></div>
+  <p>Repare em <code>disponivel</code> e <code>motivo</code> dentro de cada pizza — é a resposta do Estoque já embutida, sem precisar de uma segunda chamada.</p>
+
+  <h4>3. Peça uma pizza específica</h4>
+  <div class="code"><button class="copy">copiar</button><pre>curl -s https://pzaas.online/webhook/turmaa12/v1/menu/mussarela \
+  -H "x-api-key: turma2026"</pre></div>
+  <div class="note"><b>Se disponivel vier sempre null.</b> Não é bug — é a URL do Estoque (<code>ESTOQUE_A</code>/<code>ESTOQUE_B</code> no nó Config) ainda com o placeholder de exemplo. O cardápio continua funcionando; só a disponibilidade fica em branco até isso ser configurado.</div>
+</section>
+
+<section id="padroes">
+  <h3>Padrões e autenticação</h3>
+  <table>
+    <tr><th>Header</th><th>Valor</th><th>Obrigatório em</th></tr>
+    <tr><td><code>x-api-key</code></td><td>turma2026</td><td>Todos, exceto <code>/health</code></td></tr>
+  </table>
+  <ul>
+    <li>Protocolo <strong>HTTP/JSON</strong>, versão <strong>v1</strong> no caminho.</li>
+    <li>Todos os três endpoints são <strong>GET</strong> — nenhum aceita corpo.</li>
+    <li><code>x-pedido-id</code> não se aplica: este serviço não participa do ciclo de vida do pedido.</li>
+    <li>Toda resposta traz <code>servico: "catalogo-a"</code>, para identificar quem respondeu.</li>
+  </ul>
+</section>
+
+<section id="health">
+  <div class="ep">
+    <div class="epline"><span class="verb get">GET</span><span class="path">/turmaa12/health</span><span class="tag">sem autenticação</span></div>
+    <p>Prova de vida. Não depende do Estoque nem de nada externo.</p>
+    <div class="code"><button class="copy">copiar</button><pre>{ "status": "ok", "servico": "catalogo-a", "versao": "v1", "ts": "2026-09-09T18:00:00.000Z" }</pre></div>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="ep">
+    <div class="epline"><span class="verb get">GET</span><span class="path">/turmaa12/v1/menu</span><span class="tag">chamado pelo Gateway</span></div>
+    <p>Cardápio completo, com disponibilidade embutida em cada pizza — a consulta ao Estoque acontece aqui dentro, com retry e fallback.</p>
+
+    <h4>200 OK</h4>
+    <div class="code"><button class="copy">copiar</button><pre>{
+  "cardapio": [
+    {
+      "pizza_id": "mussarela",
+      "nome": "Mussarela",
+      "ingredientes": ["molho de tomate", "mussarela", "tomate", "orégano", "azeitona"],
+      "preco": 42.90,
+      "disponivel": false,
+      "motivo": "falta molho de tomate"
+    },
+    {
+      "pizza_id": "calabresa-acebolada",
+      "nome": "Calabresa Acebolada",
+      "ingredientes": ["molho de tomate", "calabresa", "cebola roxa", "orégano", "azeitona"],
+      "preco": 47.90,
+      "disponivel": true,
+      "motivo": null
+    }
+  ],
+  "promocoes": [],
+  "servico": "catalogo-a",
+  "disponibilidade_origem": "estoque-a"
+}</pre></div>
+    <p><code>motivo</code> só vem preenchido quando <code>disponivel</code> é <code>false</code>. <code>disponibilidade_origem</code> diz qual estoque respondeu — se vier <code>estoque-b</code>, o fallback foi acionado.</p>
+
+    <h4>200 OK — degradação (Estoque A e B fora do ar)</h4>
+    <div class="code"><button class="copy">copiar</button><pre>{
+  "cardapio": [
+    { "pizza_id": "mussarela", "...": "...", "disponivel": null, "motivo": null },
+    { "pizza_id": "calabresa-acebolada", "...": "...", "disponivel": null, "motivo": null }
+  ],
+  "promocoes": [],
+  "servico": "catalogo-a",
+  "aviso": "nao foi possivel confirmar disponibilidade com o estoque (A e B indisponiveis)"
+}</pre></div>
+    <div class="note ok"><b>Isto continua sendo 200, não 503.</b> O cardápio — sabor, ingrediente, preço — não depende do Estoque para existir. Só a pergunta "dá pra vender" fica sem resposta, marcada como <code>null</code>.</div>
+
+    <h4>401 Unauthorized</h4>
+    <div class="code"><button class="copy">copiar</button><pre>{ "erro": "nao_autorizado", "mensagem": "Header x-api-key ausente ou invalido", "servico": "catalogo-a" }</pre></div>
+  </div>
+</section>
+
+<section id="detalhe">
+  <div class="ep">
+    <div class="epline"><span class="verb get">GET</span><span class="path">/turmaa12/v1/menu/{pizza_id}</span><span class="tag">Estoque, Pagamento, Orquestrador</span></div>
+    <p>Mesmo princípio do <code>/v1/menu</code>, para uma pizza só.</p>
+
+    <h4>200 OK</h4>
+    <div class="code"><button class="copy">copiar</button><pre>{
+  "pizza_id": "mussarela",
+  "nome": "Mussarela",
+  "ingredientes": ["molho de tomate", "mussarela", "tomate", "orégano", "azeitona"],
+  "preco": 42.90,
+  "disponivel": false,
+  "motivo": "falta molho de tomate",
+  "disponibilidade_origem": "estoque-a",
+  "servico": "catalogo-a"
+}</pre></div>
+
+    <h4>404 Not Found</h4>
+    <div class="code"><button class="copy">copiar</button><pre>{ "erro": "nao_encontrado", "mensagem": "pizza_id portuguesa nao existe no cardapio", "servico": "catalogo-a" }</pre></div>
+    <p>Outros erros: <code>401 nao_autorizado</code>. A degradação (Estoque fora do ar) segue o mesmo formato do <code>/v1/menu</code>: <code>200</code> com <code>disponivel: null</code> e <code>aviso</code>.</p>
+  </div>
+</section>
+
+<section id="cardapio">
+  <h3>O cardápio hoje</h3>
+  <p class="sub">Exemplo real de resposta — é assim que <code>GET /v1/menu</code> devolve quando a mussarela está sem molho de tomate.</p>
+
+  <div class="menu-frame">
+    <div class="label">O CARDÁPIO</div>
+    <div class="rule"></div>
+
+    <div class="dish">
+      <div class="dish-top">
+        <span class="dish-name">Mussarela</span>
+        <span class="dish-status unavail">indisponível</span>
+      </div>
+      <div class="dish-ing">molho de tomate · mussarela · tomate · orégano · azeitona</div>
+      <div class="dish-price">R$ 42,90</div>
+      <div class="dish-motivo">motivo: falta molho de tomate</div>
+    </div>
+
+    <hr class="dish-divider">
+
+    <div class="dish">
+      <div class="dish-top">
+        <span class="dish-name">Calabresa Acebolada</span>
+        <span class="dish-status avail">disponível</span>
+      </div>
+      <div class="dish-ing">molho de tomate · calabresa · cebola roxa · orégano · azeitona</div>
+      <div class="dish-price">R$ 47,90</div>
+    </div>
+  </div>
+
+  <p><strong>Importante para quem integra (Estoque, Pagamento, Orquestrador):</strong> usem <code>mussarela</code> e <code>calabresa-acebolada</code> exatamente assim — minúsculo, com hífen. Um <code>pizza_id</code> que não bate entre os serviços vira erro silencioso lá na frente.</p>
+</section>
+
+<section id="erros">
+  <h3>Códigos de erro</h3>
+  <table>
+    <tr><th>HTTP</th><th>erro</th><th>Quando acontece</th></tr>
+    <tr><td>200</td><td>—</td><td>Sucesso, ou degradação (<code>disponivel: null</code> + <code>aviso</code>)</td></tr>
+    <tr><td>401</td><td><code>nao_autorizado</code></td><td><code>x-api-key</code> ausente ou errada</td></tr>
+    <tr><td>404</td><td><code>nao_encontrado</code></td><td><code>pizza_id</code> fora do cardápio, só em <code>/v1/menu/{id}</code></td></tr>
+  </table>
+  <div class="note"><b>Não existe 503 neste serviço.</b> Diferente do Orquestrador, uma falha do Estoque nunca impede o Catálogo de responder — ela só degrada o campo <code>disponivel</code>.</div>
+</section>
+
+<section id="resiliencia">
+  <h3>Resiliência</h3>
+  <p class="sub">O que acontece quando a única dependência externa deste serviço — o Estoque — falha.</p>
+  <div class="grid g3">
+    <div class="card"><div class="k">Camada 1</div><h5>Retry</h5><p>3 tentativas no Estoque A, timeout de 5s cada, 1s de espera entre elas.</p></div>
+    <div class="card"><div class="k">Camada 2</div><h5>Fallback A → B</h5><p>Esgotadas as tentativas no A, a mesma chamada vai para o B — mesmo payload.</p></div>
+    <div class="card hl"><div class="k">Camada 3</div><h5>Degradação graciosa</h5><p>Se A e B falharem os dois, o cardápio responde <code>200</code> com <code>disponivel: null</code> — nunca <code>503</code>.</p></div>
+  </div>
+  <table>
+    <tr><th>Item</th><th>Valor</th></tr>
+    <tr><td>Tentativas por estoque</td><td>3</td></tr>
+    <tr><td>Timeout por tentativa</td><td>5s</td></tr>
+    <tr><td>Pior caso (A e B fora)</td><td>~34s antes de degradar</td></tr>
+  </table>
+</section>
+
+<section id="observabilidade">
+  <h3>Observabilidade</h3>
+  <p class="sub">Todo caminho — sucesso, erro e degradação — envia log estruturado ao Logger, sempre depois de responder ao cliente.</p>
+  <div class="code dark"><button class="copy">copiar</button><pre>POST /v1/logs
+
+{
+  "servico": "catalogo-a",
+  "nivel": "warn",
+  "evento": "disponibilidade_indisponivel",
+  "http_status": 200,
+  "ts": "2026-09-09T17:00:00.000Z"
+}</pre></div>
+  <table>
+    <tr><th>Nível</th><th>Eventos</th></tr>
+    <tr><td><code>info</code></td><td><code>cardapio_consultado</code> · <code>pizza_consultada</code></td></tr>
+    <tr><td><code>warn</code></td><td><code>requisicao_recusada</code> · <code>pizza_nao_encontrada</code> · <code>disponibilidade_indisponivel</code></td></tr>
+  </table>
+  <p>Se o Logger cair, o Catálogo nunca é afetado — sem retry, sem bloqueio (<code>onError: continueRegularOutput</code>).</p>
+</section>
+
+<section id="aberto">
+  <h3>Contrato em aberto</h3>
+  <p class="sub">Pontos que ainda dependem de acordo com outras duplas — listados aqui de propósito.</p>
+  <div class="note open"><b>Formato da resposta do Estoque.</b> Enviamos <code>{ itens: [{ pizza_id, qtd: 1 }] }</code> — o mesmo contrato do Orquestrador — e aceitamos <code>disponivel</code>, <code>status</code> ou item ausente na leitura. Tolerância provisória até confirmar com a dupla do Estoque.</div>
+  <div class="note open"><b>URL do Logger.</b> O campo <code>LOGGER</code> ainda tem o placeholder <code>PREFIXO-LOGGER</code> — falta a dupla do Logger passar o prefixo real.</div>
+  <div class="note open"><b>Avisar o Pagamento.</b> O preço mora no Catálogo, não no Estoque — ainda não comunicamos isso formalmente à dupla do Pagamento.</div>
+  <p>Não implementado por decisão de escopo: reserva de ingrediente (a consulta é só leitura), promoção real (o campo existe, vem sempre vazio), e par B do próprio Catálogo.</p>
+</section>
+
+<section id="changelog">
+  <h3>Changelog</h3>
+  <table>
+    <tr><th>Versão</th><th>Mudança</th></tr>
+    <tr><td>v1.2</td><td>Logger integrado — todo caminho envia log estruturado após responder.</td></tr>
+    <tr><td>v1.1</td><td>Cardápio e disponibilidade unificados: <code>disponivel</code>/<code>motivo</code> passam a vir dentro de cada pizza, em vez de um endpoint separado. Nunca mais <code>503</code> por causa do Estoque.</td></tr>
+    <tr><td>v1.0</td><td>Três endpoints, cardápio fixo com dois sabores, preço definido.</td></tr>
+  </table>
+</section>
+
+<footer>
+  <span>Catálogo · PZaaS (serviço 02, versão A)</span>
+  <span>RA 241953 · Julia Lopez · RA 241959 · Yasmin Santos · turmaa12</span>
+</footer>
+
+</main>
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=b.parentElement.querySelector('pre').innerText;
+    navigator.clipboard.writeText(t).then(function(){
+      b.textContent='copiado';
+      setTimeout(function(){b.textContent='copiar';},1400);
+    });
+  });
+});
+var links=[].slice.call(document.querySelectorAll('#nav a'));
+var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+function mark(){
+  var y=window.scrollY+140,cur=0;
+  secs.forEach(function(s,i){ if(s && s.offsetTop<=y) cur=i; });
+  links.forEach(function(a,i){ a.classList.toggle('on',i===cur); });
+}
+window.addEventListener('scroll',mark,{passive:true}); mark();
+</script>
+</body>
+</html>
