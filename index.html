@@ -91,6 +91,20 @@ td code,th code{background:none;padding:0}
 .card p{margin:0;font-size:13px;color:var(--taupe60)}
 .k{font-family:var(--ft);font-size:11px;font-style:italic;color:var(--manjericao);margin-bottom:7px}
 
+/* cards de fluxo -- únicos preenchidos de propósito, um por cenário de chamada */
+.card.c-ok{background:#EAF3EA;border-color:var(--ok)}
+.card.c-ok h5,.card.c-ok .k{color:var(--ok)}
+.card.c-warn{background:#FBF1E1;border-color:var(--warn)}
+.card.c-warn h5,.card.c-warn .k{color:#7A5310}
+.card.c-err{background:#F6E7E6;border-color:var(--err)}
+.card.c-err h5,.card.c-err .k{color:var(--err)}
+.card.c-degrad{background:var(--taupe10);border-color:var(--vinho80);border-width:1.5px}
+.card.c-degrad h5{color:var(--vinho)}
+.card.c-degrad .k{color:var(--vinho80)}
+.card.c-info{background:#EEF3E9;border-color:var(--manjericao)}
+.card.c-info h5,.card.c-info .k{color:var(--manjericao)}
+.card[class*="c-"] p{color:var(--vinho80)}
+
 /* pilulas de status */
 .pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
 .pill{font-family:var(--fm);font-size:11.5px;background:var(--white);border:1px solid var(--taupe30);border-radius:20px;padding:6px 14px;color:var(--vinho)}
@@ -148,12 +162,15 @@ footer{border-top:1px solid var(--line);padding:28px 0 0;color:var(--taupe30);fo
   <a href="#visao">Visão geral</a>
   <a href="#rapido">Integração em 3 minutos</a>
   <a href="#padroes">Padrões e autenticação</a>
+  <div class="grp">Sistema</div>
+  <a href="#arquitetura">Arquitetura</a>
   <div class="grp">Endpoints</div>
   <a href="#health">GET /health</a>
   <a href="#menu">GET /v1/menu</a>
   <a href="#detalhe">GET /v1/menu/{id}</a>
   <div class="grp">Referência</div>
   <a href="#cardapio">O cardápio hoje</a>
+  <a href="#fluxos">Fluxos de chamada</a>
   <a href="#erros">Códigos de erro</a>
   <a href="#resiliencia">Resiliência</a>
   <a href="#observabilidade">Observabilidade</a>
@@ -213,7 +230,7 @@ Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
   <h4>3. Peça uma pizza específica</h4>
   <div class="code"><button class="copy">copiar</button><pre>curl -s https://pzaas.online/webhook/turmaa12/v1/menu/mussarela \
   -H "x-api-key: turma2026"</pre></div>
-  <div class="note"><b>Se disponivel vier sempre null.</b> Não é bug — é a URL do Estoque (<code>ESTOQUE_A</code>/<code>ESTOQUE_B</code> no nó Config) ainda com o placeholder de exemplo. O cardápio continua funcionando; só a disponibilidade fica em branco até isso ser configurado.</div>
+  <div class="note"><b>Se disponivel vier sempre null.</b> <code>ESTOQUE_A</code> e <code>ESTOQUE_B</code> (nó Config) já apontam para URLs reais — se mesmo assim vier <code>null</code>, é o fluxo de degradação graciosa entrando em ação porque os dois não responderam a tempo. O cardápio continua funcionando; só a disponibilidade fica em branco.</div>
 </section>
 
 <section id="padroes">
@@ -228,6 +245,24 @@ Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
     <li><code>x-pedido-id</code> não se aplica: este serviço não participa do ciclo de vida do pedido.</li>
     <li>Toda resposta traz <code>servico: "catalogo-a"</code>, para identificar quem respondeu.</li>
   </ul>
+</section>
+
+<section id="arquitetura">
+  <h3>Arquitetura</h3>
+  <p class="sub">O Catálogo é a porta de entrada do PZaaS: antes de existir pedido, pagamento ou produção, alguém precisa saber o que está à venda. Este serviço tem um trabalho só — ser a única fonte de verdade sobre o cardápio e o preço — e uma única dependência externa.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="k">Entrada</div>
+      <h5>Quem chama este serviço</h5>
+      <p><strong>API Gateway</strong>, para exibir o cardápio ao cliente final. <strong>Estoque</strong>, <strong>Pagamento</strong> ou <strong>Orquestrador</strong>, quando precisam confirmar que um <code>pizza_id</code> existe e qual o preço vigente.</p>
+    </div>
+    <div class="card">
+      <div class="k">Saída</div>
+      <h5>Quem este serviço chama</h5>
+      <p><strong>Estoque A</strong> e <strong>Estoque B</strong>, com retry e fallback — embutido em toda chamada a <code>/v1/menu</code> e <code>/v1/menu/{id}</code>, nunca num endpoint à parte. E o <strong>Logger</strong>, de forma assíncrona, depois de responder ao cliente.</p>
+    </div>
+  </div>
+  <div class="note"><b>Por que sem banco de dados.</b> Hoje são só dois sabores fixos — uma lista dentro do código resolve com menos peça pra quebrar, sem credencial nem conexão. O limite é claro: não escala para mais sabores. No dia em que aparecer um terceiro sabor ou uma promoção variável, a migração para Postgres (tabela <code>turmaa12_cardapio</code>) deixa de ser opcional.</div>
 </section>
 
 <section id="health">
@@ -342,6 +377,43 @@ Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
   <p><strong>Importante para quem integra (Estoque, Pagamento, Orquestrador):</strong> usem <code>mussarela</code> e <code>calabresa-acebolada</code> exatamente assim — minúsculo, com hífen. Um <code>pizza_id</code> que não bate entre os serviços vira erro silencioso lá na frente.</p>
 </section>
 
+<section id="fluxos">
+  <h3>Fluxos de chamada</h3>
+  <p class="sub">Seis cenários cobrem tudo que pode acontecer numa chamada a este serviço — do caminho feliz à falha total do Estoque. Cada card é a cor do que ele representa: verde é sucesso direto, âmbar é sucesso com desvio, vermelho é erro de verdade, e o card neutro é o único caso em que "sem resposta do Estoque" não conta como falha.</p>
+  <div class="grid g3">
+    <div class="card c-ok">
+      <div class="k">200 · caminho feliz</div>
+      <h5>Fluxo padrão</h5>
+      <p>Webhook recebe a chamada → confere <code>x-api-key</code> → monta o cardápio fixo → consulta o <strong>Estoque A</strong>, que responde dentro do timeout → combina cardápio e disponibilidade → responde <code>200</code> com <code>disponibilidade_origem: "estoque-a"</code> → log assíncrono.</p>
+    </div>
+    <div class="card c-warn">
+      <div class="k">200 · +~17s</div>
+      <h5>Fluxo de fallback (A → B)</h5>
+      <p>O Estoque A esgota as 3 tentativas (5s de timeout, 1s de espera entre elas) sem responder → a mesma chamada, com o mesmo payload, é refeita para o <strong>Estoque B</strong> → se B responder, o cardápio sai normal, só que com <code>disponibilidade_origem: "estoque-b"</code>.</p>
+    </div>
+    <div class="card c-degrad">
+      <div class="k">200 · +~34s · não é erro</div>
+      <h5>Fluxo de degradação graciosa</h5>
+      <p>Estoque A e B falham os dois → o cardápio responde <code>200</code> assim mesmo: sabor, ingrediente e preço continuam completos, só <code>disponivel</code> vira <code>null</code> em cada pizza, com um <code>aviso</code> explicando o motivo. <strong>Nunca <code>503</code></strong> — essa é a diferença central para o Orquestrador.</p>
+    </div>
+    <div class="card c-err">
+      <div class="k">401</div>
+      <h5>Fluxo de autenticação recusada</h5>
+      <p><code>x-api-key</code> ausente ou errada é verificado logo na entrada, antes de montar o cardápio ou gastar tempo chamando o Estoque. Resposta imediata, sem nenhuma dependência externa envolvida.</p>
+    </div>
+    <div class="card c-err">
+      <div class="k">404 · só em /v1/menu/{id}</div>
+      <h5>Fluxo de pizza não encontrada</h5>
+      <p>O <code>pizza_id</code> não bate com nenhum sabor do cardápio fixo → responde <code>404</code> imediatamente, sem chamar o Estoque. Não faz sentido perguntar disponibilidade de um sabor que não existe.</p>
+    </div>
+    <div class="card c-info">
+      <div class="k">assíncrono, depois da resposta</div>
+      <h5>Fluxo de observabilidade</h5>
+      <p>Todo caminho acima — sucesso, fallback, degradação ou erro — termina enviando um log estruturado ao Logger, sempre <em>depois</em> de já ter respondido ao cliente. Se o Logger cair, ninguém percebe: sem retry, sem bloqueio.</p>
+    </div>
+  </div>
+</section>
+
 <section id="erros">
   <h3>Códigos de erro</h3>
   <table>
@@ -392,16 +464,17 @@ Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
 <section id="aberto">
   <h3>Contrato em aberto</h3>
   <p class="sub">Pontos que ainda dependem de acordo com outras duplas — listados aqui de propósito.</p>
-  <div class="note open"><b>Formato da resposta do Estoque.</b> Enviamos <code>{ itens: [{ pizza_id, qtd: 1 }] }</code> — o mesmo contrato do Orquestrador — e aceitamos <code>disponivel</code>, <code>status</code> ou item ausente na leitura. Tolerância provisória até confirmar com a dupla do Estoque.</div>
-  <div class="note open"><b>URL do Logger.</b> O campo <code>LOGGER</code> ainda tem o placeholder <code>PREFIXO-LOGGER</code> — falta a dupla do Logger passar o prefixo real.</div>
+  <div class="note open"><b>Formato da resposta do Estoque.</b> <code>ESTOQUE_A</code> e <code>ESTOQUE_B</code> já apontam para URLs reais (não são mais o placeholder de exemplo), mas a leitura da resposta continua tolerante de propósito: aceitamos <code>disponivel</code>, <code>status</code> ou item ausente, com <code>motivo</code>/<code>mensagem</code> como razão. O formato exato — e se o <code>pizza_id</code> bate com o que Estoque envia — ainda não foi confirmado formalmente com a dupla do Estoque.</div>
   <div class="note open"><b>Avisar o Pagamento.</b> O preço mora no Catálogo, não no Estoque — ainda não comunicamos isso formalmente à dupla do Pagamento.</div>
   <p>Não implementado por decisão de escopo: reserva de ingrediente (a consulta é só leitura), promoção real (o campo existe, vem sempre vazio), e par B do próprio Catálogo.</p>
+  <div class="note ok"><b>Resolvido.</b> A URL do Logger já não é mais placeholder — <code>LOGGER</code> aponta para o serviço da dupla responsável e todo caminho (sucesso, erro, degradação) envia log estruturado depois de responder.</div>
 </section>
 
 <section id="changelog">
   <h3>Changelog</h3>
   <table>
     <tr><th>Versão</th><th>Mudança</th></tr>
+    <tr><td>v1.3</td><td>Documentação ampliada: seção de Arquitetura (quem chama/quem chamamos) e seção de Fluxos de chamada com os seis cenários possíveis. <code>ESTOQUE_A</code>/<code>ESTOQUE_B</code> e <code>LOGGER</code> deixaram de ser placeholder.</td></tr>
     <tr><td>v1.2</td><td>Logger integrado — todo caminho envia log estruturado após responder.</td></tr>
     <tr><td>v1.1</td><td>Cardápio e disponibilidade unificados: <code>disponivel</code>/<code>motivo</code> passam a vir dentro de cada pizza, em vez de um endpoint separado. Nunca mais <code>503</code> por causa do Estoque.</td></tr>
     <tr><td>v1.0</td><td>Três endpoints, cardápio fixo com dois sabores, preço definido.</td></tr>
