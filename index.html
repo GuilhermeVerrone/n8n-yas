@@ -210,7 +210,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 0;color:var(--taupe30);fo
 
   <h4>Base URL</h4>
   <div class="code"><button class="copy">copiar</button><pre>Produção   https://pzaas.online/webhook/turmaa12
-Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
+Teste      https://pzaas.online/webhook-test/d87485e3-f873-409d-a096-649357ebd7b0/turmaa12</pre></div>
   <p>A URL de teste só responde com o workflow aberto no editor, em modo <em>Execute workflow</em>. Para integração, use sempre a de produção.</p>
 </section>
 
@@ -228,7 +228,7 @@ Teste      https://pzaas.online/webhook-test/turmaa12</pre></div>
   <p>Repare em <code>disponivel</code> e <code>motivo</code> dentro de cada pizza — é a resposta do Estoque já embutida, sem precisar de uma segunda chamada.</p>
 
   <h4>3. Peça uma pizza específica</h4>
-  <div class="code"><button class="copy">copiar</button><pre>curl -s https://pzaas.online/webhook/turmaa12/v1/menu/mussarela \
+  <div class="code"><button class="copy">copiar</button><pre>curl -s https://pzaas.online/webhook/d87485e3-f873-409d-a096-649357ebd7b0/turmaa12/v1/menu/mussarela \
   -H "x-api-key: turma2026"</pre></div>
   <div class="note"><b>Se disponivel vier sempre null.</b> <code>ESTOQUE_A</code> e <code>ESTOQUE_B</code> (nó Config) já apontam para URLs reais — se mesmo assim vier <code>null</code>, é o fluxo de degradação graciosa entrando em ação porque os dois não responderam a tempo. O cardápio continua funcionando; só a disponibilidade fica em branco.</div>
 </section>
